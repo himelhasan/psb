@@ -1,0 +1,7 @@
+{
+  "name": "psb",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./dist", // <-- Change this to your actual build folder name
+  },
+}
