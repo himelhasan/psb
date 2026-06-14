@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSB — Match Fee Calculator</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Main Club Stylesheet for Shared Theme Variables -->
+  <link rel="stylesheet" href="./PSB — Polashpur Soccer Boys_files/styles-BU_aEldr.css" data-precedence="default" />
+  
+  <style>
+    /* Design Tokens */
+    :root {
+      --background: #08080a;
+      --foreground: #f3f4f6;
+      --card: #121215;
+      --card-border: rgba(255, 255, 255, 0.08);
+      
+      /* Accent color defined dynamically with fallback to oklch equivalent */
+      --accent: oklch(62% .24 25);
+      --accent-hover: color-mix(in srgb, var(--accent) 80%, black);
+      --accent-muted: color-mix(in srgb, var(--accent) 15%, transparent);
+      --card-hover-border: color-mix(in srgb, var(--accent) 40%, transparent);
+      
+      --border: #222226;
+      --input: #1b1b1f;
+      
+      /* Special Highlights */
+      --color-gk: #3b82f6; /* Blue for Goalkeepers */
+      --color-gk-bg: rgba(59, 130, 246, 0.08);
+      --color-gk-border: rgba(59, 130, 246, 0.3);
+      
+      --color-sohan: #fbbf24; /* Gold for Sohan */
+      --color-sohan-bg: rgba(251, 191, 36, 0.08);
+      --color-sohan-border: rgba(251, 191, 36, 0.3);
+      
+      --color-zero: #9ca3af; /* Gray for 0 mins */
+      --color-zero-bg: rgba(156, 163, 175, 0.03);
+      --color-zero-border: rgba(156, 163, 175, 0.1);
+    }
+
+    /* Reset & Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: radial-gradient(circle at 80% 20%, #15111e 0%, var(--background) 60%);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #08080a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2b2b35;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    /* Navigation Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(8, 8, 10, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--foreground);
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 24px;
+      letter-spacing: 2px;
+      transition: opacity 0.2s ease;
+    }
+
+    .logo-link:hover {
+      opacity: 0.85;
+    }
+
+    .logo-img {
+      height: 36px;
+      width: auto;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-back {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--foreground);
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+      background-color: var(--foreground);
+      color: #000;
+      border-color: var(--foreground);
+    }
+
+    /* Layout & Main Container */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 90px auto 40px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 1024px) {
+      main {
+        grid-template-columns: 340px 1fr 280px;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      main {
+        grid-template-columns: 350px 1fr 310px;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      height: fit-content;
+    }
+
+    .card-title {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 24px;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      color: var(--foreground);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-title-badge {
+      background-color: var(--accent-muted);
+      color: var(--accent);
+      font-size: 11px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-zero);
+      margin-bottom: 4px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-currency-suffix {
+      position: absolute;
+      right: 12px;
+      font-weight: 700;
+      color: var(--color-zero);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--input);
+      border: 1px solid var(--border);
+      color: var(--foreground);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-muted);
+    }
+
+    /* Live Summary List */
+    .summary-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-top: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .summary-label {
+      font-size: 13px;
+      color: var(--color-zero);
+    }
+
+    .summary-value {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--foreground);
+    }
+
+    .summary-value.highlight {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .summary-value.total-bdt {
+      font-size: 20px;
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      letter-spacing: 1px;
+      color: var(--foreground);
+    }
+
+    /* Actions Panel */
+    .controls-wrapper {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border-color: var(--border);
+      color: var(--foreground);
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-zero);
+    }
+
+    .btn-danger {
+      background-color: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background-color: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    /* Table Styles */
+    .table-container {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.02);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--color-zero);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      vertical-align: middle;
+      transition: background-color 0.2s ease;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr {
+      transition: all 0.2s ease;
+    }
+
+    /* Player Highlighting Styles */
+    .player-row-gk {
+      background-color: var(--color-gk-bg);
+    }
+    .player-row-gk td {
+      border-bottom-color: var(--color-gk-border);
+    }
+    .player-row-gk:hover {
+      background-color: rgba(59, 130, 246, 0.12);
+    }
+    .badge-gk {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: var(--color-gk);
+      border: 1px solid var(--color-gk-border);
+    }
+
+    .player-row-sohan {
+      background-color: var(--color-sohan-bg);
+    }
+    .player-row-sohan td {
+      border-bottom-color: var(--color-sohan-border);
+    }
+    .player-row-sohan:hover {
+      background-color: rgba(251, 191, 36, 0.12);
+    }
+    .badge-sohan {
+      background-color: rgba(251, 191, 36, 0.15);
+      color: var(--color-sohan);
+      border: 1px solid var(--color-sohan-border);
+    }
+
+    .player-row-zero {
+      background-color: var(--color-zero-bg);
+      opacity: 0.5;
+    }
+    .player-row-zero:hover {
+      opacity: 0.8;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+    .badge-zero {
+      background-color: rgba(156, 163, 175, 0.1);
+      color: var(--color-zero);
+      border: 1px solid var(--color-zero-border);
+    }
+
+    .badge-guest {
+      background-color: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .player-name-cell {
+      font-weight: 600;
+      color: var(--foreground);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Dropdown inside table */
+    .minutes-select {
+      background: var(--input);
+      border: 1px solid var(--border);
+      color: var(--foreground);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      width: 90px;
+      transition: all 0.2s ease;
+    }
+
+    .minutes-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .fee-cell {
+      font-family: 'Inter', monospace;
+      font-weight: 700;
+      font-size: 14.5px;
+      color: var(--foreground);
+    }
+
+    .fee-cell.fixed-marker {
+      color: var(--color-sohan);
+    }
+
+    .fee-cell.capped-marker {
+      color: var(--color-gk);
+    }
+
+    .btn-remove-player {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-remove-player:hover {
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Sticky Side Container */
+    .sticky-container {
+      position: sticky;
+      top: 88px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Squad Pool Panel (Right Side) */
+    .pool-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 12px;
+    }
+
+    .pool-player-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--input);
+      border: 1px solid var(--border);
+      color: var(--foreground);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .pool-player-btn:hover {
+      background-color: var(--accent-muted);
+      border-color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    .pool-player-btn.pool-gk {
+      border-left: 3px solid var(--color-gk);
+    }
+
+    .pool-player-btn.pool-sohan {
+      border-left: 3px solid var(--color-sohan);
+    }
+
+    .pool-player-role {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-zero);
+    }
+    
+    .pool-player-btn.pool-gk .pool-player-role {
+      color: var(--color-gk);
+    }
+    .pool-player-btn.pool-sohan .pool-player-role {
+      color: var(--color-sohan);
+    }
+
+    /* Modal / Report Card styling */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 24px;
+    }
+
+    .modal-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      max-width: 600px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--color-zero);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      transition: color 0.2s ease;
+    }
+
+    .modal-close:hover {
+      color: var(--foreground);
+    }
+
+    .report-textarea {
+      width: 100%;
+      height: 250px;
+      background: var(--input);
+      border: 1px solid var(--border);
+      color: var(--foreground);
+      font-family: 'Inter', monospace;
+      font-size: 13px;
+      padding: 16px;
+      border-radius: 6px;
+      resize: none;
+      line-height: 1.6;
+    }
+
+    .report-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: var(--accent);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 300;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.32, 1);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Print-specific stylesheet */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 12px;
+      }
+      
+      header, .btn, .filter-bar, .sticky-container .card:last-child, .btn-remove-player, .minutes-select, .pool-container {
+        display: none !important;
+      }
+
+      main {
+        display: block !important;
+        margin-top: 20px !important;
+        padding: 0 !important;
+      }
+
+      .card {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin-bottom: 30px !important;
+      }
+
+      .table-container {
+        border: 1px solid #000 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      table {
+        color: #000 !important;
+      }
+
+      th {
+        background: #f3f4f6 !important;
+        color: #000 !important;
+        border-bottom: 2px solid #000 !important;
+      }
+
+      td {
+        border-bottom: 1px solid #ccc !important;
+        color: #000 !important;
+        padding: 8px 12px !important;
+      }
+
+      .player-row-gk, .player-row-sohan, .player-row-zero {
+        background-color: transparent !important;
+        opacity: 1 !important;
+      }
+
+      .badge {
+        border: 1px solid #000 !important;
+        color: #000 !important;
+        background: transparent !important;
+      }
+
+      .print-fee-display {
+        font-weight: bold;
+      }
+
+      .minutes-print-val {
+        display: inline !important;
+      }
+      .minutes-select {
+        display: none !important;
+      }
+    }
+
+    .minutes-print-val {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="PSB" class="logo-img" onerror="this.style.display='none'">
+        <span>PSB CLUB</span>
+      </a>
+      <div class="nav-actions">
+        <a href="index.html" class="btn-back">← Back to Club Page</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard -->
+  <main>
+    
+    <!-- Sidebar: Summary Panel (Left Column) -->
+    <div class="sticky-container">
+      
+      <!-- Live Summary Card -->
+      <div class="card">
+        <h2 class="card-title">Live Summary <span class="card-title-badge">Matchday</span></h2>
+        
+        <ul class="summary-list">
+          <li class="summary-item">
+            <span class="summary-label">Target Slot Fee</span>
+            <div class="input-wrapper" style="width: 130px;">
+              <input type="number" id="slotFee" class="form-control" value="1400" min="0" step="50" style="padding-right: 42px; text-align: right; font-weight: 700;">
+              <span class="input-currency-suffix">BDT</span>
+            </div>
+          </li>
+          <li class="summary-item">
+            <span class="summary-label">Active Players</span>
+            <span class="summary-value" id="summaryActiveCount">0</span>
+          </li>
+          <li class="summary-item">
+            <span class="summary-label">Total Minutes Played</span>
+            <span class="summary-value" id="summaryTotalMinutes">0 min</span>
+          </li>
+          <li class="summary-item">
+            <span class="summary-label">Cost Per Minute (Normal)</span>
+            <span class="summary-value" id="summaryCostPerMin">0.00 BDT</span>
+          </li>
+          <li class="summary-item">
+            <span class="summary-label">Total Collected</span>
+            <span class="summary-value highlight" id="summaryTotalCollected">0 BDT</span>
+          </li>
+          <li class="summary-item">
+            <span class="summary-label">Remaining Balance</span>
+            <span class="summary-value total-bdt" id="summaryRemaining">0 BDT</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Action Panel Card -->
+      <div class="card">
+        <h2 class="card-title">Calculator Controls</h2>
+        
+        <div class="controls-wrapper">
+          <button class="btn btn-primary" id="btnReport">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Generate Report
+          </button>
+          <button class="btn btn-secondary" id="btnCopy">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            Copy Summary Text
+          </button>
+          <button class="btn btn-secondary" id="btnExport">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export to CSV
+          </button>
+          <button class="btn btn-secondary" id="btnPrint">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm5-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h6z" />
+            </svg>
+            Print Results
+          </button>
+          <button class="btn btn-danger" id="btnReset">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17" />
+            </svg>
+            Reset Match
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Center Column: Active Match Players -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Table Header & Summary Info -->
+      <div style="background: var(--card); border: 1px solid var(--card-border); border-radius: 8px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-family: 'Bebas Neue', Impact, sans-serif; font-size: 20px; letter-spacing: 1px;">Active Squad Playing</span>
+        <span id="activeCountLabel" style="font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-muted); padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">12 Players</span>
+      </div>
+
+      <!-- Player Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Player Name</th>
+              <th>Minutes Played</th>
+              <th style="text-align: right;">Fee Amount</th>
+              <th style="width: 50px; text-align: center;">Bench</th>
+            </tr>
+          </thead>
+          <tbody id="playerTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Squad Pool (Benched/ Roster Players) -->
+    <div class="pool-container">
+      <div class="card" style="width: 100%;">
+        <h2 class="card-title">Club Squad Pool</h2>
+        
+        <!-- Search bar (searches the pool) -->
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label">Search Available Players</label>
+          <div class="input-wrapper">
+            <input type="text" id="searchPool" class="form-control" placeholder="Type name to filter pool..." style="padding-right: 12px;">
+          </div>
+        </div>
+
+        <!-- Scrollable Pool List -->
+        <div class="pool-list" id="poolList">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Add Guest Player -->
+        <div class="pool-custom-add" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);">
+          <label class="form-label">Add Guest Player</label>
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+            <input type="text" id="customPlayerName" class="form-control" placeholder="Guest name...">
+            <button class="btn btn-primary" id="btnCustomAdd" style="width: auto; padding: 8px 12px;">Add</button>
+          </div>
+          <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; color: var(--color-zero); user-select: none;">
+            <input type="checkbox" id="customIsGK" style="accent-color: var(--accent); cursor: pointer;">
+            Mark as Goalkeeper?
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Generated Report Modal -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="card-title" style="margin-bottom: 0;">Generated Match Report</h3>
+        <button class="modal-close" id="btnModalClose">×</button>
+      </div>
+      <textarea id="reportText" class="report-textarea" readonly></textarea>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-primary" id="btnCopyReport" style="flex: 1;">Copy to Clipboard</button>
+        <button class="btn btn-secondary" id="btnModalClose2">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">Report copied to clipboard!</div>
+
+  <script>
+    // 1. Club Master Roster (37 players)
+    // Utsho, Himel, Naeem, Childhood are goalkeepers. Sohan is fixed.
+    const ROSTER = [
+      { name: "Utsho", isGoalkeeper: true, isSohan: false },
+      { name: "Shaishab", isGoalkeeper: false, isSohan: false },
+      { name: "Sujon", isGoalkeeper: false, isSohan: false },
+      { name: "Nakib", isGoalkeeper: false, isSohan: false },
+      { name: "Sakib", isGoalkeeper: false, isSohan: false },
+      { name: "Himel", isGoalkeeper: true, isSohan: false },
+      { name: "Shawon", isGoalkeeper: false, isSohan: false },
+      { name: "Ayon", isGoalkeeper: false, isSohan: false },
+      { name: "Robin", isGoalkeeper: false, isSohan: false },
+      { name: "Omi", isGoalkeeper: false, isSohan: false },
+      { name: "Sohan", isGoalkeeper: false, isSohan: true },
+      { name: "Sajjad", isGoalkeeper: false, isSohan: false },
+      { name: "Rokibul", isGoalkeeper: false, isSohan: false },
+      { name: "Tasbih", isGoalkeeper: false, isSohan: false },
+      { name: "Rabbi", isGoalkeeper: false, isSohan: false },
+      { name: "Omar", isGoalkeeper: false, isSohan: false },
+      { name: "Moshiur", isGoalkeeper: false, isSohan: false },
+      { name: "Naeem", isGoalkeeper: true, isSohan: false },
+      { name: "Childhood", isGoalkeeper: true, isSohan: false },
+      { name: "Sowad", isGoalkeeper: false, isSohan: false },
+      { name: "Saif", isGoalkeeper: false, isSohan: false },
+      { name: "Akash", isGoalkeeper: false, isSohan: false },
+      { name: "Shushmoy", isGoalkeeper: false, isSohan: false },
+      { name: "Shoron", isGoalkeeper: false, isSohan: false },
+      { name: "Aminul", isGoalkeeper: false, isSohan: false },
+      { name: "Jisan", isGoalkeeper: false, isSohan: false },
+      { name: "Kayum", isGoalkeeper: false, isSohan: false },
+      { name: "Parvej", isGoalkeeper: false, isSohan: false },
+      { name: "Tiash", isGoalkeeper: false, isSohan: false },
+      { name: "Noor", isGoalkeeper: false, isSohan: false },
+      { name: "Oliul", isGoalkeeper: false, isSohan: false },
+      { name: "Mojumdar", isGoalkeeper: false, isSohan: false },
+      { name: "Maz", isGoalkeeper: false, isSohan: false },
+      { name: "Tanzil", isGoalkeeper: false, isSohan: false },
+      { name: "Rokib", isGoalkeeper: false, isSohan: false },
+      { name: "Nahid", isGoalkeeper: false, isSohan: false },
+      { name: "Roni", isGoalkeeper: false, isSohan: false }
+    ];
+
+    // Main squad names that appear by default
+    const defaultSquadNames = ["Utsho", "Shaishab", "Sujon", "Nakib", "Sakib", "Himel", "Shawon", "Ayon", "Robin", "Omi", "Sohan", "Sajjad"];
+
+    // State Variables
+    let players = [];
+
+    // Initialize State
+    function init() {
+      const savedData = localStorage.getItem('psb_calculator_players_v3');
+      if (savedData) {
+        try {
+          const savedPlayers = JSON.parse(savedData);
+          
+          // Re-initialize players to ensure roles (isGoalkeeper/isSohan) match ROSTER array code definitions exactly.
+          players = [];
+          savedPlayers.forEach(savedP => {
+            const rosterMatch = ROSTER.find(r => r.name.toLowerCase() === savedP.name.toLowerCase());
+            players.push({
+              id: savedP.id,
+              name: rosterMatch ? rosterMatch.name : savedP.name,
+              isGoalkeeper: rosterMatch ? rosterMatch.isGoalkeeper : !!savedP.isGoalkeeper,
+              isSohan: rosterMatch ? rosterMatch.isSohan : !!savedP.isSohan,
+              isGuest: rosterMatch ? false : !!savedP.isGuest,
+              minutes: savedP.minutes !== undefined ? savedP.minutes : 90, // DEFAULT TO 90 MINUTES
+              fee: 0
+            });
+          });
+        } catch (e) {
+          loadDefaultSquad();
+        }
+      } else {
+        loadDefaultSquad();
+      }
+      calculateFees();
+      renderTable();
+      renderPool();
+    }
+
+    function loadDefaultSquad() {
+      players = [];
+      defaultSquadNames.forEach((name, idx) => {
+        const rosterP = ROSTER.find(r => r.name === name);
+        if (rosterP) {
+          players.push({
+            id: name.toLowerCase() + '_' + idx,
+            name: rosterP.name,
+            isGoalkeeper: rosterP.isGoalkeeper,
+            isSohan: rosterP.isSohan,
+            isGuest: false,
+            minutes: 90, // DEFAULT TO 90 MINUTES AT THE START
+            fee: 0
+          });
+        }
+      });
+      saveToStorage();
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('psb_calculator_players_v3', JSON.stringify(players));
+    }
+
+    // Calculation Engine
+    function calculateFees() {
+      const slotFeeVal = parseFloat(document.getElementById('slotFee').value);
+      const slotFee = isNaN(slotFeeVal) ? 0 : slotFeeVal;
+
+      // Reset values
+      players.forEach(p => {
+        p.fee = 0;
+        p.isCapped = false;
+      });
+
+      // Filter active players (minutes > 0)
+      const activePlayers = players.filter(p => p.minutes > 0);
+      const activeCount = activePlayers.length;
+
+      if (activeCount === 0) {
+        updateSummary(slotFee, 0, 0, 0, 0, slotFee);
+        return;
+      }
+
+      // 1. Sohan Rule: Fixed 120 BDT if active (minutes > 0)
+      const activeSohan = activePlayers.find(p => p.isSohan);
+      const sohanFee = activeSohan ? 120 : 0;
+      if (activeSohan) {
+        activeSohan.fee = 120;
+      }
+
+      // Remaining fee after Sohan's fixed amount
+      let remainingFee = slotFee - sohanFee;
+
+      // Active players excluding Sohan
+      const activeNonSohan = activePlayers.filter(p => !p.isSohan);
+      const totalNonSohanMinutes = activeNonSohan.reduce((sum, p) => sum + p.minutes, 0);
+
+      // Handle edge case where only Sohan is active
+      if (activeNonSohan.length === 0) {
+        if (activeSohan) {
+          activeSohan.fee = slotFee; // Sohan absorbs all if he is the only active player
+        }
+        updateSummary(slotFee, activeCount, activePlayers.reduce((sum, p) => sum + p.minutes, 0), 0, slotFee, 0);
+        return;
+      }
+
+      // Base rate per minute for players excluding Sohan
+      let baseRate = totalNonSohanMinutes > 0 ? remainingFee / totalNonSohanMinutes : 0;
+
+      // 2. Goalkeeper Rule: Capped at 150 BDT
+      // Assign normal base rates first
+      activeNonSohan.forEach(p => {
+        p.fee = baseRate * p.minutes;
+      });
+
+      // Find active goalkeepers
+      const activeGKs = activeNonSohan.filter(p => p.isGoalkeeper);
+      let totalGKExcess = 0;
+
+      activeGKs.forEach(p => {
+        if (p.fee > 150) {
+          totalGKExcess += (p.fee - 150);
+          p.fee = 150;
+          p.isCapped = true;
+        }
+      });
+
+      // 3. Redistribution Rule: Redistribute GK excess to non-goalkeeper, non-Sohan players
+      const activeNonGKNonSohan = activeNonSohan.filter(p => !p.isGoalkeeper);
+      const totalNonGKNonSohanMinutes = activeNonGKNonSohan.reduce((sum, p) => sum + p.minutes, 0);
+
+      if (totalGKExcess > 0 && totalNonGKNonSohanMinutes > 0) {
+        activeNonGKNonSohan.forEach(p => {
+          p.fee += totalGKExcess * (p.minutes / totalNonGKNonSohanMinutes);
+        });
+      } else if (totalGKExcess > 0 && totalNonGKNonSohanMinutes === 0) {
+        // Fallback: If only goalkeepers are playing (along with Sohan, or alone), we can't cap without violating
+        // the rule that total collected must equal the slot fee. So goalkeepers pay their normal uncapped share.
+        activeGKs.forEach(p => {
+          p.fee = baseRate * p.minutes;
+          p.isCapped = false;
+        });
+      }
+
+      // 4. Precision & Exact Sum Adjustment (Rounding to 2 decimals, ensuring exact match)
+      let tempTotal = 0;
+      players.forEach(p => {
+        p.fee = Math.round(p.fee * 100) / 100;
+        tempTotal += p.fee;
+      });
+
+      // Discrepancy adjustment due to rounding
+      let discrepancy = Math.round((slotFee - tempTotal) * 100) / 100;
+      if (Math.abs(discrepancy) > 0.001) {
+        // Prioritize adjusting a non-goalkeeper normal active player with the highest minutes
+        let adjPlayer = [...activeNonGKNonSohan].sort((a, b) => b.minutes - a.minutes)[0];
+        if (!adjPlayer) {
+          // Fallback to active goalkeeper
+          adjPlayer = [...activeGKs].sort((a, b) => b.minutes - a.minutes)[0];
+        }
+        if (!adjPlayer) {
+          // Fallback to Sohan
+          adjPlayer = activeSohan;
+        }
+
+        if (adjPlayer) {
+          adjPlayer.fee = Math.round((adjPlayer.fee + discrepancy) * 100) / 100;
+        }
+      }
+
+      // Calculate final summary statistics
+      let finalCollected = 0;
+      let totalMinutes = 0;
+      players.forEach(p => {
+        finalCollected += p.fee;
+        if (p.minutes > 0) totalMinutes += p.minutes;
+      });
+
+      const remainingBalance = Math.round((slotFee - finalCollected) * 100) / 100;
+
+      // Effective Cost Per Minute for normal players (active non-Sohan, non-capped GK)
+      let costPerMin = 0;
+      const normalActive = activeNonGKNonSohan.filter(p => p.minutes > 0);
+      if (normalActive.length > 0) {
+        costPerMin = normalActive[0].fee / normalActive[0].minutes;
+      } else if (totalMinutes > 0) {
+        costPerMin = finalCollected / totalMinutes;
+      }
+
+      updateSummary(slotFee, activeCount, totalMinutes, costPerMin, finalCollected, remainingBalance);
+    }
+
+    function updateSummary(slotFee, activeCount, totalMins, costPerMin, totalCollected, remaining) {
+      document.getElementById('summaryActiveCount').innerText = activeCount;
+      document.getElementById('summaryTotalMinutes').innerText = `${totalMins} min`;
+      document.getElementById('summaryCostPerMin').innerText = `${costPerMin.toFixed(4)} BDT`;
+      document.getElementById('summaryTotalCollected').innerText = `${totalCollected.toFixed(2)} BDT`;
+      document.getElementById('summaryRemaining').innerText = `${remaining.toFixed(2)} BDT`;
+      document.getElementById('activeCountLabel').innerText = `${activeCount} ${activeCount === 1 ? 'Player' : 'Players'}`;
+    }
+
+    // UI Rendering
+    function renderTable() {
+      const tbody = document.getElementById('playerTableBody');
+      tbody.innerHTML = '';
+
+      if (players.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-zero); padding: 40px 0;">No active players playing. Select from the Squad Pool on the right to add them!</td></tr>`;
+        return;
+      }
+
+      // Render players sorted by Name (A-Z)
+      const sortedPlayers = [...players].sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedPlayers.forEach(p => {
+        const tr = document.createElement('tr');
+        
+        // Determine highlighting class
+        if (p.minutes === 0) {
+          tr.className = 'player-row-zero';
+        } else if (p.isSohan) {
+          tr.className = 'player-row-sohan';
+        } else if (p.isGoalkeeper) {
+          tr.className = 'player-row-gk';
+        }
+
+        // Labels / Badges
+        let badgesHtml = '';
+        if (p.isSohan) {
+          badgesHtml += `<span class="badge badge-sohan">Sohan (Fixed)</span>`;
+        } else if (p.isGoalkeeper) {
+          badgesHtml += `<span class="badge badge-gk">Goalkeeper</span>`;
+        }
+        if (p.isGuest) {
+          badgesHtml += `<span class="badge badge-guest">Guest</span>`;
+        }
+        if (p.isCapped && p.minutes > 0) {
+          badgesHtml += `<span class="badge badge-gk" style="background-color: var(--color-gk); color: #fff;">CAPPED</span>`;
+        }
+
+        // Select options
+        const optionsHtml = [0, 30, 60, 90].map(mins => 
+          `<option value="${mins}" ${p.minutes === mins ? 'selected' : ''}>${mins} min</option>`
+        ).join('');
+
+        // Action Remove Button (Sends player back to squad pool)
+        const deleteButtonHtml = `
+          <button class="btn-remove-player" onclick="removePlayerFromMatch('${p.id}')" title="Send player to Squad Pool">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>`;
+
+        // Render Row
+        tr.innerHTML = `
+          <td>
+            <div class="player-name-cell">
+              ${p.name}
+              ${badgesHtml}
+            </div>
+          </td>
+          <td>
+            <select class="minutes-select" onchange="updatePlayerMinutes('${p.id}', this.value)">
+              ${optionsHtml}
+            </select>
+            <span class="minutes-print-val">${p.minutes} min</span>
+          </td>
+          <td style="text-align: right;">
+            <span class="fee-cell ${p.isSohan && p.minutes > 0 ? 'fixed-marker' : ''} ${p.isCapped && p.minutes > 0 ? 'capped-marker' : ''}">
+              ${p.fee.toFixed(2)}
+            </span>
+            <span style="font-size: 11px; color: var(--color-zero); font-weight: 500; margin-left: 2px;">BDT</span>
+          </td>
+          <td style="text-align: center;">
+            ${deleteButtonHtml}
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Render Squad Pool (Right Sidebar)
+    function renderPool() {
+      const poolList = document.getElementById('poolList');
+      const searchQuery = document.getElementById('searchPool').value.toLowerCase().trim();
+
+      // Find benched roster players (those in ROSTER but NOT in active match table)
+      const activeNames = new Set(players.map(p => p.name.toLowerCase()));
+      const benched = ROSTER.filter(p => !activeNames.has(p.name.toLowerCase()));
+
+      // Filter pool by search query
+      const filtered = benched.filter(p => p.name.toLowerCase().includes(searchQuery));
+
+      poolList.innerHTML = '';
+
+      if (filtered.length === 0) {
+        poolList.innerHTML = `<div style="text-align: center; color: var(--color-zero); padding: 20px 0; font-size: 12px;">No benched players found.</div>`;
+        return;
+      }
+
+      // Sort pool alphabetically
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+      filtered.forEach(p => {
+        const btn = document.createElement('button');
+        
+        let poolClass = 'pool-player-btn';
+        let roleLabel = '';
+
+        if (p.isSohan) {
+          poolClass += ' pool-sohan';
+          roleLabel = 'Fixed';
+        } else if (p.isGoalkeeper) {
+          poolClass += ' pool-gk';
+          roleLabel = 'GK';
+        }
+
+        btn.className = poolClass;
+        btn.innerHTML = `
+          <span>+ ${p.name}</span>
+          ${roleLabel ? `<span class="pool-player-role">${roleLabel}</span>` : ''}
+        `;
+        
+        btn.addEventListener('click', () => {
+          addPlayerToMatch(p.name);
+        });
+
+        poolList.appendChild(btn);
+      });
+    }
+
+    // Move player from Pool to Active Match
+    window.addPlayerToMatch = function(playerName) {
+      const rosterPlayer = ROSTER.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+      
+      const newPlayer = {
+        id: 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: rosterPlayer ? rosterPlayer.name : playerName,
+        isGoalkeeper: rosterPlayer ? rosterPlayer.isGoalkeeper : false,
+        isSohan: rosterPlayer ? rosterPlayer.isSohan : false,
+        isGuest: !rosterPlayer,
+        minutes: 90, // BY DEFAULT 90 MINUTES EACH PLAYER AT ADDITION
+        fee: 0
+      };
+
+      players.push(newPlayer);
+      saveToStorage();
+      calculateFees();
+      renderTable();
+      renderPool();
+      showToast(`Added "${newPlayer.name}" (90 min) to match.`);
+    }
+
+    // Move player from Active Match back to Pool
+    window.removePlayerFromMatch = function(playerId) {
+      const index = players.findIndex(p => p.id === playerId);
+      if (index > -1) {
+        const name = players[index].name;
+        players.splice(index, 1);
+        saveToStorage();
+        calculateFees();
+        renderTable();
+        renderPool();
+        showToast(`Moved "${name}" back to Squad Pool.`);
+      }
+    };
+
+    // Update player minutes
+    window.updatePlayerMinutes = function(playerId, minutes) {
+      const player = players.find(p => p.id === playerId);
+      if (player) {
+        player.minutes = parseInt(minutes);
+        calculateFees();
+        saveToStorage();
+        renderTable();
+      }
+    };
+
+    // Add Guest Player from input Form
+    document.getElementById('btnCustomAdd').addEventListener('click', addCustomPlayer);
+    document.getElementById('customPlayerName').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') addCustomPlayer();
+    });
+
+    function addCustomPlayer() {
+      const input = document.getElementById('customPlayerName');
+      const gkCheckbox = document.getElementById('customIsGK');
+      const name = input.value.trim();
+
+      if (!name) return;
+
+      // Check for duplicate in active list
+      if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+        alert(`Player "${name}" is already in the match!`);
+        return;
+      }
+
+      // Check if they are in the benched pool/roster
+      const rosterPlayer = ROSTER.find(r => r.name.toLowerCase() === name.toLowerCase());
+      if (rosterPlayer) {
+        addPlayerToMatch(rosterPlayer.name);
+      } else {
+        // Create custom guest player
+        const isGK = gkCheckbox.checked || name.toLowerCase() === 'naeem' || name.toLowerCase() === 'childhood';
+        const isSohan = name.toLowerCase() === 'sohan';
+
+        const newPlayer = {
+          id: 'player_' + Date.now(),
+          name: name,
+          isGoalkeeper: isGK,
+          isSohan: isSohan,
+          isGuest: true,
+          minutes: 90, // DEFAULT TO 90 MINUTES
+          fee: 0
+        };
+
+        players.push(newPlayer);
+        saveToStorage();
+        calculateFees();
+        renderTable();
+        renderPool();
+        showToast(`Added Guest "${name}" (90 min) to match.`);
+      }
+
+      input.value = '';
+      gkCheckbox.checked = false;
+      input.focus();
+    }
+
+    // Reset Match Day
+    document.getElementById('btnReset').addEventListener('click', function() {
+      if (confirm("Reset active list back to default 12 players? This will clear other players and set everyone to 90 min.")) {
+        loadDefaultSquad();
+        document.getElementById('slotFee').value = "1400";
+        document.getElementById('searchPool').value = '';
+        calculateFees();
+        renderTable();
+        renderPool();
+        showToast("Calculator reset to 12 main players.");
+      }
+    });
+
+    // Search input (filters Squad Pool on the right)
+    document.getElementById('searchPool').addEventListener('input', renderPool);
+    
+    // Slot Fee change triggers recalculation
+    document.getElementById('slotFee').addEventListener('input', () => {
+      calculateFees();
+      renderTable();
+    });
+
+    // Generate Match Report
+    document.getElementById('btnReport').addEventListener('click', function() {
+      const slotFeeVal = document.getElementById('slotFee').value;
+      const activePlayers = players.filter(p => p.minutes > 0).sort((a, b) => b.fee - a.fee);
+      
+      let reportText = `Match Fee Report\n`;
+      reportText += `Slot Fee: ${slotFeeVal} BDT\n\n`;
+
+      if (activePlayers.length === 0) {
+        reportText += `No players participated in this match.\n`;
+      } else {
+        activePlayers.forEach(p => {
+          let suffix = '';
+          if (p.isSohan) {
+            suffix = ' (Fixed)';
+          } else if (p.isGoalkeeper && p.isCapped) {
+            suffix = ' (GK Capped)';
+          } else if (p.isGoalkeeper) {
+            suffix = ' (GK)';
+          }
+          reportText += `${p.name} - ${p.minutes} min - ${p.fee.toFixed(2)} BDT${suffix}\n`;
+        });
+      }
+
+      const totalCollected = activePlayers.reduce((sum, p) => sum + p.fee, 0);
+      reportText += `\nTotal Collected: ${totalCollected.toFixed(2)} BDT\n`;
+
+      document.getElementById('reportText').value = reportText;
+      document.getElementById('reportModal').style.display = 'flex';
+    });
+
+    // Modal Close
+    function closeModal() {
+      document.getElementById('reportModal').style.display = 'none';
+    }
+    document.getElementById('btnModalClose').addEventListener('click', closeModal);
+    document.getElementById('btnModalClose2').addEventListener('click', closeModal);
+    
+    // Copy Report to Clipboard
+    document.getElementById('btnCopyReport').addEventListener('click', function() {
+      const textarea = document.getElementById('reportText');
+      textarea.select();
+      document.execCommand('copy');
+      showToast("Report copied to clipboard!");
+      closeModal();
+    });
+
+    // Copy Summary Text
+    document.getElementById('btnCopy').addEventListener('click', function() {
+      const activeCount = document.getElementById('summaryActiveCount').innerText;
+      const totalMins = document.getElementById('summaryTotalMinutes').innerText;
+      const costPerMin = document.getElementById('summaryCostPerMin').innerText;
+      const totalCol = document.getElementById('summaryTotalCollected').innerText;
+      const slotFee = document.getElementById('slotFee').value;
+
+      const summaryText = `Match Summary:\nSlot Fee: ${slotFee} BDT\nActive Players: ${activeCount}\nTotal Minutes: ${totalMins}\nCost Per Minute: ${costPerMin}\nTotal Collected: ${totalCol}`;
+      
+      const el = document.createElement('textarea');
+      el.value = summaryText;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+
+      showToast("Summary copied to clipboard!");
+    });
+
+    // Export to CSV
+    document.getElementById('btnExport').addEventListener('click', function() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Player Name,Minutes Played,Role,Fee (BDT)\n";
+
+      players.forEach(p => {
+        let role = "Player";
+        if (p.isSohan) role = "Sohan (Fixed)";
+        else if (p.isGoalkeeper) role = "Goalkeeper";
+        if (p.isGuest) role += " (Guest)";
+
+        csvContent += `"${p.name}",${p.minutes},"${role}",${p.fee.toFixed(2)}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      
+      const date = new Date().toISOString().slice(0, 10);
+      link.setAttribute("download", `PSB_Match_Fees_${date}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("CSV file exported!");
+    });
+
+    // Print Results
+    document.getElementById('btnPrint').addEventListener('click', function() {
+      window.print();
+    });
+
+    // Toast show helper
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initialize
+    window.onload = init;
+  </script>
+</body>
+</html>
