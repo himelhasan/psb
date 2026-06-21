@@ -379,6 +379,81 @@
       .bench-card:hover .bench-card-name {
         color: var(--accent);
       }
+
+      /* Mobile Menu Button & Drawer */
+      #mobile-menu-btn {
+        display: none;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 24px;
+        height: 16px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 100;
+      }
+      #mobile-menu-btn span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background-color: var(--foreground);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+      #mobile-menu-btn.active span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+      }
+      #mobile-menu-btn.active span:nth-child(2) {
+        opacity: 0;
+      }
+      #mobile-menu-btn.active span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+      }
+      
+      #mobile-menu-drawer {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(8, 8, 10, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 90;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      #mobile-menu-drawer.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #mobile-menu-drawer nav {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+      }
+      #mobile-menu-drawer nav a {
+        font-family: inherit;
+        font-size: 2.25rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        text-decoration: none;
+        color: var(--foreground);
+        transition: color 0.3s ease;
+      }
+      #mobile-menu-drawer nav a:hover {
+        color: var(--accent);
+      }
+      
+      @media (max-width: 767px) {
+        #mobile-menu-btn {
+          display: flex;
+        }
+      }
     </style>
     <meta name="twitter:title" content="PSB — Polashpur Soccer Boys" />
     <meta
@@ -422,8 +497,25 @@
             class="hidden sm:inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] border border-foreground px-4 py-2 hover:bg-foreground hover:text-primary-foreground transition"
             >Follow</a
           >
+          <!-- Hamburger Button (mobile only) -->
+          <button id="mobile-menu-btn" class="md:hidden flex flex-col justify-between w-6 h-4 bg-transparent border-none cursor-pointer z-[100]" aria-label="Toggle Navigation">
+            <span class="w-full h-0.5 bg-foreground transition-all duration-300"></span>
+            <span class="w-full h-0.5 bg-foreground transition-all duration-300"></span>
+            <span class="w-full h-0.5 bg-foreground transition-all duration-300"></span>
+          </button>
         </div>
       </header>
+      
+      <!-- Mobile Menu Drawer -->
+      <div id="mobile-menu-drawer" class="fixed inset-0 bg-background/95 backdrop-blur-lg z-40 flex flex-col justify-center items-center gap-8 transition-all duration-300 opacity-0 pointer-events-none">
+        <nav class="flex flex-col items-center gap-8 text-2xl font-display tracking-widest">
+          <a href="#club" class="hover:text-accent transition">Club</a>
+          <a href="#squad" class="hover:text-accent transition">Squad</a>
+          <a href="#contact" class="hover:text-accent transition">Contact</a>
+          <a href="calculator.html" class="hover:text-accent transition">Calculator</a>
+          <a href="https://www.facebook.com/psb.bd" target="_blank" rel="noreferrer" class="mt-4 inline-block text-sm font-bold uppercase tracking-[0.2em] border border-foreground px-8 py-3 hover:bg-foreground hover:text-primary-foreground transition">Follow</a>
+        </nav>
+      </div>
       <section id="top" class="relative min-h-screen flex items-end pt-16 grain">
         <img
           src="./PSB — Polashpur Soccer Boys_files/hero-action-BTtTU5n8.jpg"
@@ -505,7 +597,7 @@
             <p>
               As time passed, the team expanded with dedicated players: Tanzil, Moshiur, Shaishab,
               Ayon,Omar,Rokib, Kayum, Parvej, Tiash, Akash, Oliul , Sakib, Saif, Aminul, Nahid,
-              Jisan, Naeem, shawon, roni and Mojumdar.
+              Jisan, Naeem, shawon, roni, Mojumdar, Mizan, Masud, Kabbo, Shaon, GK Hridoy, and GK Sumo.
               <br /><br />
               We play for passion, unity, and the love of the game. PSB is more than a team — it’s a
               brotherhood built on trust, effort, and consistency.
@@ -812,6 +904,48 @@
                   <div class="bench-card-name">Shova</div>
                 </div>
               </div>
+              <div class="bench-card">
+                <div class="bench-card-number">—</div>
+                <div class="bench-card-info">
+                  <div class="bench-card-position">Player</div>
+                  <div class="bench-card-name">Mizan</div>
+                </div>
+              </div>
+              <div class="bench-card">
+                <div class="bench-card-number">—</div>
+                <div class="bench-card-info">
+                  <div class="bench-card-position">Player</div>
+                  <div class="bench-card-name">Masud</div>
+                </div>
+              </div>
+              <div class="bench-card">
+                <div class="bench-card-number">—</div>
+                <div class="bench-card-info">
+                  <div class="bench-card-position">Player</div>
+                  <div class="bench-card-name">Kabbo</div>
+                </div>
+              </div>
+              <div class="bench-card">
+                <div class="bench-card-number">—</div>
+                <div class="bench-card-info">
+                  <div class="bench-card-position">Player</div>
+                  <div class="bench-card-name">Shaon</div>
+                </div>
+              </div>
+              <div class="bench-card">
+                <div class="bench-card-number">—</div>
+                <div class="bench-card-info">
+                  <div class="bench-card-position">GK</div>
+                  <div class="bench-card-name">GK Hridoy</div>
+                </div>
+              </div>
+              <div class="bench-card">
+                <div class="bench-card-number">—</div>
+                <div class="bench-card-info">
+                  <div class="bench-card-position">GK</div>
+                  <div class="bench-card-name">GK Sumo</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -959,6 +1093,43 @@
           }
         });
       }
+    </script>
+    <script>
+      // Mobile Menu Toggle
+      (function() {
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const menuDrawer = document.getElementById('mobile-menu-drawer');
+        
+        if (menuBtn && menuDrawer) {
+          const menuLinks = menuDrawer.querySelectorAll('nav a');
+          
+          function toggleMenu() {
+            const isOpen = menuBtn.classList.contains('active');
+            if (isOpen) {
+              closeMenu();
+            } else {
+              openMenu();
+            }
+          }
+
+          function openMenu() {
+            menuBtn.classList.add('active');
+            menuDrawer.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          }
+
+          function closeMenu() {
+            menuBtn.classList.remove('active');
+            menuDrawer.classList.remove('active');
+            document.body.style.overflow = '';
+          }
+
+          menuBtn.addEventListener('click', toggleMenu);
+          menuLinks.forEach(link => {
+            link.addEventListener('click', closeMenu);
+          });
+        }
+      })();
     </script>
   </body>
 </html>

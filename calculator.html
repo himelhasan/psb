@@ -362,7 +362,7 @@
       background: var(--card);
       border: 1px solid var(--card-border);
       border-radius: 8px;
-      overflow: hidden;
+      overflow-x: auto;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
@@ -468,6 +468,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      flex-wrap: wrap;
     }
 
     /* Dropdown inside table */
@@ -524,11 +525,17 @@
 
     /* Sticky Side Container */
     .sticky-container {
-      position: sticky;
-      top: 88px;
+      position: static;
       display: flex;
       flex-direction: column;
       gap: 20px;
+    }
+
+    @media (min-width: 1024px) {
+      .sticky-container {
+        position: sticky;
+        top: 88px;
+      }
     }
 
     /* Squad Pool Panel (Right Side) */
@@ -753,6 +760,72 @@
     .minutes-print-val {
       display: none;
     }
+
+    /* Responsiveness Additions */
+    .btn-back-text-mobile {
+      display: none;
+    }
+    
+    .th-mobile {
+      display: none;
+    }
+
+    @media (max-width: 1023px) {
+      .pool-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 8px;
+        max-height: 240px;
+      }
+    }
+
+    @media (min-width: 640px) and (max-width: 1023px) {
+      .sticky-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        padding: 0 12px;
+        margin-top: 80px;
+        gap: 16px;
+      }
+      th, td {
+        padding: 8px 10px;
+      }
+      .modal-card {
+        padding: 16px;
+        gap: 12px;
+      }
+      .report-textarea {
+        height: 180px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .btn-back-text {
+        display: none;
+      }
+      .btn-back-text-mobile {
+        display: inline;
+      }
+      .logo-link span {
+        font-size: 20px;
+        letter-spacing: 1px;
+      }
+      .header-container {
+        padding: 0 12px;
+      }
+      .th-desktop {
+        display: none;
+      }
+      .th-mobile {
+        display: inline;
+      }
+    }
   </style>
 </head>
 <body>
@@ -765,7 +838,10 @@
         <span>PSB CLUB</span>
       </a>
       <div class="nav-actions">
-        <a href="index.html" class="btn-back">← Back to Club Page</a>
+        <a href="index.html" class="btn-back">
+          <span class="btn-back-text">← Back to Club Page</span>
+          <span class="btn-back-text-mobile">← Back</span>
+        </a>
       </div>
     </div>
   </header>
@@ -866,8 +942,14 @@
           <thead>
             <tr>
               <th>Player Name</th>
-              <th>Minutes Played</th>
-              <th style="text-align: right;">Fee Amount</th>
+              <th>
+                <span class="th-desktop">Minutes Played</span>
+                <span class="th-mobile">Mins</span>
+              </th>
+              <th style="text-align: right;">
+                <span class="th-desktop">Fee Amount</span>
+                <span class="th-mobile">Fee</span>
+              </th>
               <th style="width: 50px; text-align: center;">Bench</th>
             </tr>
           </thead>
@@ -973,7 +1055,13 @@
       { name: "Tanzil", isGoalkeeper: false, isSohan: false },
       { name: "Rokib", isGoalkeeper: false, isSohan: false },
       { name: "Nahid", isGoalkeeper: false, isSohan: false },
-      { name: "Roni", isGoalkeeper: false, isSohan: false }
+      { name: "Roni", isGoalkeeper: false, isSohan: false },
+      { name: "Mizan", isGoalkeeper: false, isSohan: false },
+      { name: "Masud", isGoalkeeper: false, isSohan: false },
+      { name: "Kabbo", isGoalkeeper: false, isSohan: false },
+      { name: "Shaon", isGoalkeeper: false, isSohan: false },
+      { name: "GK Hridoy", isGoalkeeper: true, isSohan: false },
+      { name: "GK Sumo", isGoalkeeper: true, isSohan: false }
     ];
 
     // Main squad names that appear by default
@@ -1118,29 +1206,49 @@
         });
       }
 
-      // 4. Precision & Exact Sum Adjustment (Rounding to 2 decimals, ensuring exact match)
-      let tempTotal = 0;
+      // 4. Rounding to Nearest 10 BDT & Exact Sum Adjustment
       players.forEach(p => {
-        p.fee = Math.round(p.fee * 100) / 100;
-        tempTotal += p.fee;
+        if (p.minutes > 0) {
+          p.fee = Math.round(p.fee / 10) * 10;
+        } else {
+          p.fee = 0;
+        }
       });
 
-      // Discrepancy adjustment due to rounding
-      let discrepancy = Math.round((slotFee - tempTotal) * 100) / 100;
-      if (Math.abs(discrepancy) > 0.001) {
-        // Prioritize adjusting a non-goalkeeper normal active player with the highest minutes
-        let adjPlayer = [...activeNonGKNonSohan].sort((a, b) => b.minutes - a.minutes)[0];
-        if (!adjPlayer) {
-          // Fallback to active goalkeeper
-          adjPlayer = [...activeGKs].sort((a, b) => b.minutes - a.minutes)[0];
-        }
-        if (!adjPlayer) {
-          // Fallback to Sohan
-          adjPlayer = activeSohan;
-        }
+      let tempTotal = players.reduce((sum, p) => sum + p.fee, 0);
 
-        if (adjPlayer) {
-          adjPlayer.fee = Math.round((adjPlayer.fee + discrepancy) * 100) / 100;
+      // Discrepancy adjustment due to rounding
+      let discrepancy = slotFee - tempTotal;
+      
+      // Get all active players as candidates for discrepancy adjustments
+      let candidates = players.filter(p => p.minutes > 0);
+      
+      // Prioritize who gets adjusted first:
+      // 1. Non-GK, non-Sohan active players, sorted by minutes descending
+      // 2. Active GKs, sorted by minutes descending
+      // 3. Sohan
+      candidates.sort((a, b) => {
+        if (a.isSohan !== b.isSohan) return a.isSohan ? 1 : -1;
+        if (a.isGoalkeeper !== b.isGoalkeeper) return a.isGoalkeeper ? 1 : -1;
+        return b.minutes - a.minutes;
+      });
+
+      if (candidates.length > 0 && Math.abs(discrepancy) > 0.01) {
+        let index = 0;
+        let attempts = 0;
+        const maxAttempts = candidates.length * 50; // prevent infinite loops
+        while (Math.abs(discrepancy) > 0.01 && attempts < maxAttempts) {
+          // Adjust in steps of 10 BDT, or the remainder if it's smaller
+          let adj = Math.sign(discrepancy) * Math.min(10, Math.abs(discrepancy));
+          if (adj < 0 && candidates[index].fee + adj < 0) {
+            index = (index + 1) % candidates.length;
+            attempts++;
+            continue;
+          }
+          candidates[index].fee = Math.round((candidates[index].fee + adj) * 100) / 100;
+          discrepancy -= adj;
+          index = (index + 1) % candidates.length;
+          attempts = 0; // reset attempts when adjustment is successful
         }
       }
 
@@ -1170,8 +1278,8 @@
       document.getElementById('summaryActiveCount').innerText = activeCount;
       document.getElementById('summaryTotalMinutes').innerText = `${totalMins} min`;
       document.getElementById('summaryCostPerMin').innerText = `${costPerMin.toFixed(4)} BDT`;
-      document.getElementById('summaryTotalCollected').innerText = `${totalCollected.toFixed(2)} BDT`;
-      document.getElementById('summaryRemaining').innerText = `${remaining.toFixed(2)} BDT`;
+      document.getElementById('summaryTotalCollected').innerText = `${totalCollected % 1 === 0 ? totalCollected.toFixed(0) : totalCollected.toFixed(2)} BDT`;
+      document.getElementById('summaryRemaining').innerText = `${remaining % 1 === 0 ? remaining.toFixed(0) : remaining.toFixed(2)} BDT`;
       document.getElementById('activeCountLabel').innerText = `${activeCount} ${activeCount === 1 ? 'Player' : 'Players'}`;
     }
 
@@ -1243,7 +1351,7 @@
           </td>
           <td style="text-align: right;">
             <span class="fee-cell ${p.isSohan && p.minutes > 0 ? 'fixed-marker' : ''} ${p.isCapped && p.minutes > 0 ? 'capped-marker' : ''}">
-              ${p.fee.toFixed(2)}
+              ${p.fee % 1 === 0 ? p.fee.toFixed(0) : p.fee.toFixed(2)}
             </span>
             <span style="font-size: 11px; color: var(--color-zero); font-weight: 500; margin-left: 2px;">BDT</span>
           </td>
@@ -1378,7 +1486,10 @@
         addPlayerToMatch(rosterPlayer.name);
       } else {
         // Create custom guest player
-        const isGK = gkCheckbox.checked || name.toLowerCase() === 'naeem' || name.toLowerCase() === 'childhood';
+        const isGK = gkCheckbox.checked || 
+                     name.toLowerCase() === 'naeem' || 
+                     name.toLowerCase() === 'childhood' || 
+                     name.toLowerCase().startsWith('gk');
         const isSohan = name.toLowerCase() === 'sohan';
 
         const newPlayer = {
@@ -1446,12 +1557,12 @@
           } else if (p.isGoalkeeper) {
             suffix = ' (GK)';
           }
-          reportText += `${p.name} - ${p.minutes} min - ${p.fee.toFixed(2)} BDT${suffix}\n`;
+          reportText += `${p.name} - ${p.minutes} min - ${p.fee % 1 === 0 ? p.fee.toFixed(0) : p.fee.toFixed(2)} BDT${suffix}\n`;
         });
       }
 
       const totalCollected = activePlayers.reduce((sum, p) => sum + p.fee, 0);
-      reportText += `\nTotal Collected: ${totalCollected.toFixed(2)} BDT\n`;
+      reportText += `\nTotal Collected: ${totalCollected % 1 === 0 ? totalCollected.toFixed(0) : totalCollected.toFixed(2)} BDT\n`;
 
       document.getElementById('reportText').value = reportText;
       document.getElementById('reportModal').style.display = 'flex';
@@ -1504,7 +1615,7 @@
         else if (p.isGoalkeeper) role = "Goalkeeper";
         if (p.isGuest) role += " (Guest)";
 
-        csvContent += `"${p.name}",${p.minutes},"${role}",${p.fee.toFixed(2)}\n`;
+        csvContent += `"${p.name}",${p.minutes},"${role}",${p.fee % 1 === 0 ? p.fee.toFixed(0) : p.fee.toFixed(2)}\n`;
       });
 
       const encodedUri = encodeURI(csvContent);
